@@ -351,6 +351,41 @@
     let chosen    = null;
     const pages   = ['page1','page2','page3','page4'];
 
+    /* ---------- Moteur Audio (Web Audio API) ---------- */
+    let audioCtx = null;
+    function getCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+    function playTone(freq, type, duration, vol, delay) {
+      delay = delay || 0;
+      var ctx = getCtx();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + duration);
+    }
+    function playFanfare() {
+      [523, 659, 784, 1047].forEach(function(f, i) { playTone(f, 'square', 0.25, 0.15, i * 0.13); });
+    }
+    function playBell() {
+      playTone(880, 'sine', 1.2, 0.3, 0);
+      playTone(1108, 'sine', 0.8, 0.15, 0.05);
+    }
+    function playVictory() {
+      var melody = [523, 659, 784, 659, 784, 1047];
+      var durs   = [0.15, 0.15, 0.15, 0.1, 0.1, 0.5];
+      var t = 0;
+      melody.forEach(function(f, i) { playTone(f, 'sine', durs[i] + 0.1, 0.2, t); t += durs[i] + 0.03; });
+    }
+    function vibrate(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
+
     /* ---------- Navigation ---------- */
     function showPage(id) {
       pages.forEach(p => {
@@ -362,8 +397,10 @@
 
     /* ---------- OUI ---------- */
     function sayYes(e) {
+      playFanfare();
+      vibrate([100, 50, 100, 50, 200]);
       spawnHearts(e.clientX, e.clientY);
-      setTimeout(() => showPage('page2'), 350);
+      setTimeout(() => { playBell(); showPage('page2'); }, 500);
     }
 
     /* ---------- NON (se barre) ---------- */
@@ -437,6 +474,8 @@
     /* ---------- Page finale ---------- */
     function showFinal() {
       showPage('page4');
+      playVictory();
+      vibrate([200, 100, 200, 100, 400]);
       const taglines = {
         film:     'Que réjouissance soit faite !\nLa cour se réunit ce soir devant un récit enchanté 🎬🍿',
         soleil:   'Que réjouissance soit faite !\nLes deux nobles contempleront ensemble le soleil se couchant sur le royaume 🌅',
