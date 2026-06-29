@@ -262,9 +262,46 @@
       object-fit: contain;
       border-radius: 12px;
     }
+
+    /* ---- Splash d'entrée ---- */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: linear-gradient(160deg, #fff5f5 0%, #fff 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      transition: opacity 0.5s ease;
+    }
+    #splash.hide { opacity: 0; pointer-events: none; }
+    .btn-enter {
+      background: #e24b4a;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 18px 44px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(226,75,74,0.4);
+      animation: pulse 1.6s ease-in-out infinite;
+      margin-top: 1.5rem;
+    }
   </style>
 </head>
 <body>
+
+  <!-- ===== Splash iOS unlock ===== -->
+  <div id="splash">
+    <div style="font-size:64px; margin-bottom:1rem;">📜</div>
+    <h1 style="font-size:22px; font-weight:600; color:#1a1a1a;">Un message royal vous attend</h1>
+    <p style="font-size:15px; color:#888; margin-top:0.5rem;">Appuyez pour briser les sceaux</p>
+    <button class="btn-enter" onclick="enterPage()">Entrer dans la cour 👑</button>
+  </div>
 
   <!-- ===== Page 1 : Invitation ===== -->
   <div id="page1" class="page active">
@@ -385,6 +422,19 @@
       melody.forEach(function(f, i) { playTone(f, 'sine', durs[i] + 0.1, 0.2, t); t += durs[i] + 0.03; });
     }
     function vibrate(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
+
+    /* ---------- Déblocage iOS ---------- */
+    function enterPage() {
+      // Débloque l'AudioContext sur iOS (nécessite un geste utilisateur)
+      getCtx().resume();
+      // Joue un silence pour débloquer
+      playTone(1, 'sine', 0.01, 0.001, 0);
+      // Cache le splash
+      const splash = document.getElementById('splash');
+      splash.classList.add('hide');
+      setTimeout(() => splash.remove(), 600);
+    }
+
 
     /* ---------- Navigation ---------- */
     function showPage(id) {
